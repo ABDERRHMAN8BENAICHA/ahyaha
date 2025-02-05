@@ -18,16 +18,21 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.ahyaha.ui.theme.AhyahaTheme
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,24 +41,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             AhyahaTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "BenAicha!",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                    //FirstUI(modifier = Modifier.padding(innerPadding))
+                    FirstUI(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+
 
 /**
  * Main composable function for the UI layout
@@ -62,6 +57,10 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Composable
 fun FirstUI(modifier: Modifier = Modifier) {
     // TODO 1: Create state variables for text input and items list
+    var item by remember { mutableStateOf("") }
+    var items by remember { mutableStateOf(listOf<String>()) }
+    var searchQuery by remember { mutableStateOf("") }
+    var editingIndex by remember { mutableStateOf(-1) }
 
     Column(
         modifier = modifier
@@ -69,14 +68,47 @@ fun FirstUI(modifier: Modifier = Modifier) {
             .fillMaxSize()
     ) {
         SearchInputBar(
-            textValue = "", // TODO 2: Connect to state
-            onTextValueChange = { /* TODO 3: Update text state */ },
-            onAddItem = { /* TODO 4: Add item to list */ },
-            onSearch = { /* TODO 5: Implement search functionality */ }
+            textValue = item, // TODO 2: Connect to state
+            onTextValueChange = { /* TODO 3: Update text state */
+                text ->  item = text
+            },
+            onAddItem = { /* TODO 4: Add item to list */
+               if(item.isNotBlank()){
+                 if(editingIndex != -1){
+                     items = items.toMutableList().apply {
+                         this[editingIndex] = item
+                     }
+                     editingIndex = -1
+                 }else{
+                     items = items + item
+                 }
+                   item = ""
+               }
+            },
+            onSearch = { /* TODO 5: Implement search functionality */
+                query -> searchQuery = query
+
+            },
+            isEditing = editingIndex != -1
         )
 
+
         // TODO 6: Display list of items using CardsList composable
-        CardsList(emptyList())
+        val displayItems = if(searchQuery.isEmpty()){
+            items
+        }else{
+            items.filter { it.contains(searchQuery , ignoreCase = true) }
+        }
+
+        CardsList(displayedItems = displayItems,
+            onEditItem = {  index , itemText ->
+                item = itemText
+                editingIndex = index
+            },
+            onDeleteItem = {index ->
+                items = items.toMutableList().apply { removeAt(index) }
+            }
+        )
     }
 }
 
@@ -92,14 +124,25 @@ fun SearchInputBar(
     textValue: String,
     onTextValueChange: (String) -> Unit,
     onAddItem: (String) -> Unit,
-    onSearch: (String) -> Unit
+    onSearch: (String) -> Unit,
+    isEditing: Boolean
 ) {
     Column {
         TextField(
             value = textValue,
             onValueChange = onTextValueChange,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Enter text...") }
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.LightGray,
+                cursorColor = Color.Black
+            ),
+            placeholder = {
+                Text("Enter text...",
+                    color = Color.Black
+                )
+            }
+
         )
 
         Row(
@@ -108,11 +151,15 @@ fun SearchInputBar(
                 .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Button(onClick = { /* TODO 7: Handle add button click */ }) {
-                Text("Add")
+            Button(onClick = { /* TODO 7: Handle add button click */
+                onAddItem(textValue)
+            }) {
+                Text(if(isEditing) "Update" else "Add")
             }
 
-            Button(onClick = { /* TODO 8: Handle search button click */ }) {
+            Button(onClick = { /* TODO 8: Handle search button click */
+                onSearch(textValue)
+            }) {
                 Text("Search")
             }
         }
@@ -124,18 +171,46 @@ fun SearchInputBar(
  * @param displayedItems List of items to display
  */
 @Composable
-fun CardsList(displayedItems: List<String>) {
-    // TODO 9: Implement LazyColumn to display items
+fun CardsList(
+    displayedItems: List<String>,
+    onEditItem: (Int, String) -> Unit,
+    onDeleteItem: (Int) -> Unit
+) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        // TODO 10: Create cards for each item in the list
-        items(displayedItems) { item ->
+        items(displayedItems.size) { index ->
+            val item = displayedItems[index]
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 4.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                Text(text = "Sample Item", modifier = Modifier.padding(16.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = item, color = Color.Black)
+
+                    Row {
+                        // Edit Button
+                        Button(
+                            onClick = { onEditItem(index, item) },
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Text("Edit")
+                        }
+
+                        // Delete Button
+                        Button(
+                            onClick = { onDeleteItem(index) }
+                        ) {
+                            Text("Delete")
+                        }
+                    }
+                }
             }
         }
     }
