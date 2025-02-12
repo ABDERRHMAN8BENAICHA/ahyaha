@@ -3,140 +3,134 @@ package com.example.ahyaha
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.ahyaha.ui.theme.AhyahaTheme
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-            AhyahaTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "BenAicha!",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                    //FirstUI(modifier = Modifier.padding(innerPadding))
+            ListApp()
+        }
+    }
+}
+
+@Composable
+fun ListApp() {
+    var textValue by remember { mutableStateOf("") }
+    val allItems = remember { mutableStateListOf<String>() }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val displayedItems = allItems.filter { it.contains(searchQuery, ignoreCase = true) }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text(
+            text = "AHYAHA",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            textAlign = TextAlign.Center
+        )
+
+        SearchInputBar(
+            textValue = textValue,
+            onTextChange = { textValue = it },
+            onSearch = { searchQuery = textValue }
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        AddButton(
+            onAdd = {
+                if (textValue.isNotBlank()) {
+                    allItems.add(textValue)
+                    textValue = ""
+                }
+            }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        CardsList(items = displayedItems, onDelete = { allItems.remove(it) })
+
+        if (displayedItems.isEmpty()) {
+            Text(
+                text = "No items found",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 16.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun SearchInputBar(
+    textValue: String,
+    onTextChange: (String) -> Unit,
+    onSearch: () -> Unit
+) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedTextField(
+            value = textValue,
+            onValueChange = onTextChange,
+            label = { Text("Enter text") },
+            modifier = Modifier.weight(1f)
+        )
+
+        Button(onClick = onSearch, modifier = Modifier.height(56.dp)) {
+            Text("Search")
+        }
+    }
+}
+
+@Composable
+fun AddButton(onAdd: () -> Unit) {
+    Button(onClick = onAdd, modifier = Modifier.fillMaxWidth()) {
+        Text("Add")
+    }
+}
+
+@Composable
+fun CardsList(items: List<String>, onDelete: (String) -> Unit) {
+    LazyColumn {
+        items(items) { item ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = item)
+
+                    IconButton(onClick = { onDelete(item) }) {
+                        Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
+                    }
                 }
             }
         }
     }
 }
 
+@Preview(showBackground = true)
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-/**
- * Main composable function for the UI layout
- * @param modifier Modifier for layout adjustments
- */
-@Composable
-fun FirstUI(modifier: Modifier = Modifier) {
-    // TODO 1: Create state variables for text input and items list
-
-    Column(
-        modifier = modifier
-            .padding(25.dp)
-            .fillMaxSize()
-    ) {
-        SearchInputBar(
-            textValue = "", // TODO 2: Connect to state
-            onTextValueChange = { /* TODO 3: Update text state */ },
-            onAddItem = { /* TODO 4: Add item to list */ },
-            onSearch = { /* TODO 5: Implement search functionality */ }
-        )
-
-        // TODO 6: Display list of items using CardsList composable
-        CardsList(emptyList())
-    }
-}
-
-/**
- * Composable for search and input controls
- * @param textValue Current value of the input field
- * @param onTextValueChange Callback for text changes
- * @param onAddItem Callback for adding new items
- * @param onSearch Callback for performing search
- */
-@Composable
-fun SearchInputBar(
-    textValue: String,
-    onTextValueChange: (String) -> Unit,
-    onAddItem: (String) -> Unit,
-    onSearch: (String) -> Unit
-) {
-    Column {
-        TextField(
-            value = textValue,
-            onValueChange = onTextValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Enter text...") }
-        )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Button(onClick = { /* TODO 7: Handle add button click */ }) {
-                Text("Add")
-            }
-
-            Button(onClick = { /* TODO 8: Handle search button click */ }) {
-                Text("Search")
-            }
-        }
-    }
-}
-
-/**
- * Composable for displaying a list of items in cards
- * @param displayedItems List of items to display
- */
-@Composable
-fun CardsList(displayedItems: List<String>) {
-    // TODO 9: Implement LazyColumn to display items
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        // TODO 10: Create cards for each item in the list
-        items(displayedItems) { item ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Text(text = "Sample Item", modifier = Modifier.padding(16.dp))
-            }
-        }
+fun PreviewListApp() {
+    MaterialTheme {
+        ListApp()
     }
 }
