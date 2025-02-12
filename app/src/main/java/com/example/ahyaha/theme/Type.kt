@@ -1,4 +1,4 @@
-package com.example.ahyaha.ui.theme
+package com.example.ahyaha.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
@@ -21,7 +21,7 @@ val Typography = Typography(
         fontSize = 16.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.5.sp,
-        color = SteelGray
+
     ),
     labelSmall = TextStyle(
         fontFamily = FontFamily.Default,
