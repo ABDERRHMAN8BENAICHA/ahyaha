@@ -10,31 +10,43 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-data class UIState(
-    val isLoading: Boolean = false,
-    val donors: List<Donor> = emptyList(),
-    val error: String? = null
-)
-
 class DonorViewModel : ViewModel() {
-    
-    private val _uiState = MutableStateFlow(UIState())
-    val uiState: StateFlow<UIState> = _uiState.asStateFlow()
+
+    private val _uiState = MutableStateFlow(DonorUiState())
+    val uiState: StateFlow<DonorUiState> = _uiState
+
+    private val allDonors = DonorRepository.getAllDonors() // قائمة المتبرعين الأصلية
 
     init {
-        getDonors()
+        _uiState.value = DonorUiState(donors = allDonors)
     }
 
-    fun getDonors() {
+    fun filterDonorsByBloodType(bloodType: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            try {
-                delay(2000)
-                val donors = DonorRepository.getAllDonors()
-                _uiState.value = _uiState.value.copy(donors = donors, isLoading = false)
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
+            val filteredList = if (bloodType.isEmpty()) {
+                allDonors
+            } else {
+                allDonors.filter { it.bloodGroup + it.Rh == bloodType }
             }
+            _uiState.value = DonorUiState(donors = filteredList)
+        }
+    }
+
+    fun filterDonorsByName(query: String) {
+        viewModelScope.launch {
+            val filteredList = if (query.isEmpty()) {
+                allDonors
+            } else {
+                allDonors.filter { it.name.contains(query, ignoreCase = true) }
+            }
+            _uiState.value = DonorUiState(donors = filteredList)
         }
     }
 }
+
+
+data class DonorUiState(
+    val donors: List<Donor> = emptyList(),
+    val isLoading: Boolean = false,
+    val error : String? = null
+)

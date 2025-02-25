@@ -13,9 +13,8 @@ data class BloodTypeState(
     val bloodTypes: List<BloodType> = emptyList()
 )
 
-
 class BloodTypeViewModel : ViewModel() {
-    
+
     private val _bloodTypeState = MutableStateFlow(BloodTypeState())
     val bloodTypeState: StateFlow<BloodTypeState> = _bloodTypeState.asStateFlow()
 
