@@ -1,6 +1,4 @@
 package com.example.ahyaha.view
-import android.telecom.QueryLocationException
-import coil.compose.rememberAsyncImagePainter
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -51,7 +49,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
 import com.example.ahyaha.R
 import com.example.ahyaha.model.BloodType
 import com.example.ahyaha.model.Donor
@@ -327,6 +326,7 @@ fun BloodTypeGrid() {
 
 
 
+
 @Composable
 fun RegularDonorCard(donor: Donor) {
     Column(
@@ -334,7 +334,7 @@ fun RegularDonorCard(donor: Donor) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
-            painter = rememberAsyncImagePainter(donor.profilePicture),
+            painter = rememberImagePainter(donor.profilePicture ?: R.drawable.ic_profile_placeholder),
             contentDescription = "Profile Picture",
             modifier = Modifier.size(50.dp).clip(CircleShape),
             contentScale = ContentScale.Crop
@@ -342,6 +342,9 @@ fun RegularDonorCard(donor: Donor) {
         Text(text = donor.name, style = MaterialTheme.typography.bodySmall)
     }
 }
+
+
+
 @Composable
 fun ActivityCard(
     activityName: String,
