@@ -1,5 +1,7 @@
 package com.example.ahyaha.repository
 
+
+import com.example.ahyaha.R
 import com.example.ahyaha.model.BloodType
 
 object BloodTypeRepository {
@@ -7,14 +9,14 @@ object BloodTypeRepository {
     fun getAllBloodTypes(): List<BloodType> {
         // Simulating fetching data from a data source
         return listOf(
-            BloodType("1", "A", "+"),
-            BloodType("2", "B", "+"),
-            BloodType("3", "AB", "+"),
-            BloodType("4", "O", "+"),
-            BloodType("5", "A", "-"),
-            BloodType("6", "B", "-"),
-            BloodType("7", "AB", "-"),
-            BloodType("8", "O", "-")
+        BloodType("1", "O", "+" , Picture= R.drawable.img),
+        BloodType("2", "B", "+" , Picture= R.drawable.img_1),
+        BloodType("3", "AB", "+", Picture= R.drawable.img_2),
+        BloodType("4", "A", "+" , Picture= R.drawable.img_3),
+        BloodType("5", "O", "-" , Picture= R.drawable.img_4),
+        BloodType("6", "A", "-" , Picture= R.drawable.img_5),
+        BloodType("7", "AB", "-" , Picture= R.drawable.img_6),
+        BloodType("8", "B", "-" , Picture= R.drawable.img_7 )
         )
     }
 }
