@@ -3,6 +3,7 @@ package com.example.ahyaha.presentation.view.components
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LocationOn
@@ -21,7 +22,7 @@ fun BottomNavigationBar(onTabSelected: (Int) -> Unit) {
         contentColor = MaterialTheme.colorScheme.onBackground,
         tonalElevation = 0.dp
     ) {
-        IconButton(onClick = { onTabSelected(1) }) {
+        IconButton(onClick = { onTabSelected(0) }) {
             Icon(
                 Icons.Default.LocationOn,
                 contentDescription = "location",
@@ -31,7 +32,17 @@ fun BottomNavigationBar(onTabSelected: (Int) -> Unit) {
 
         Spacer(modifier = Modifier.weight(1f))
 
-        IconButton(onClick = { onTabSelected(0) }) {
+        IconButton(onClick = { onTabSelected(1) }) {
+            Icon(
+                Icons.Default.AddCircle,
+                contentDescription = "addDonnor",
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        IconButton(onClick = { onTabSelected(2) }) {
             Icon(
                 Icons.Default.Home,
                 contentDescription = "Home",

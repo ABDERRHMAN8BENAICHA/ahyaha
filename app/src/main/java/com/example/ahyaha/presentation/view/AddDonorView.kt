@@ -1,17 +1,25 @@
 package com.example.ahyaha.presentation.view
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.ahyaha.presentation.viewmodel.AddDonorEvent
 import com.example.ahyaha.presentation.viewmodel.AddDonorViewModel
-import com.example.ahyaha.presentation.viewmodel.BloodTypeViewModel
-import com.example.ahyaha.presentation.viewmodel.DonorViewModel
 
 @Composable
 fun AddDonorView(
@@ -19,6 +27,15 @@ fun AddDonorView(
     onBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
+
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        imageUri = uri
+        viewModel.onEvent(AddDonorEvent.ProfilePictureChanged(uri.toString()))
+    }
 
     Column(
         modifier = Modifier
@@ -62,7 +79,7 @@ fun AddDonorView(
 
         // Rh factor dropdown
         OutlinedTextField(
-            value = state.rh,
+            value = state.Rh,
             onValueChange = { viewModel.onEvent(AddDonorEvent.RhChanged(it)) },
             label = { Text("Rh Factor") },
             modifier = Modifier.fillMaxWidth()
@@ -76,13 +93,31 @@ fun AddDonorView(
             modifier = Modifier.fillMaxWidth()
         )
 
-        // Profile picture URL field
-        OutlinedTextField(
-            value = state.profilePicture,
-            onValueChange = { viewModel.onEvent(AddDonorEvent.ProfilePictureChanged(it)) },
-            label = { Text("Profile Picture URL") },
+        // Profile picture section
+        if (imageUri != null) {
+            Image(
+                painter = rememberAsyncImagePainter(
+                    ImageRequest.Builder(context)
+                        .data(imageUri)
+                        .build()
+                ),
+                contentDescription = "Profile Picture",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                contentScale = ContentScale.Crop
+            )
+        }
+
+        // Button to pick an image
+        Button(
+            onClick = { launcher.launch("image/*") },
             modifier = Modifier.fillMaxWidth()
-        )
+        ) {
+            Icon(Icons.Default.Face , contentDescription = "Pick Image")
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Pick Profile Picture")
+        }
 
         // Submit button
         Button(
@@ -109,36 +144,6 @@ fun AddDonorView(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(8.dp)
             )
-        }
-    }
-}
-
-@Composable
-fun AppNavigation(
-    donorViewModel: DonorViewModel,
-    bloodTypeViewModel: BloodTypeViewModel
-) {
-    val navController = rememberNavController()
-
-    NavHost(
-        navController = navController,
-        startDestination = "home"
-    ) {
-        composable("home") {
-            MainScreen(
-                donorViewModel = donorViewModel,
-                bloodTypeViewModel = bloodTypeViewModel,
-                navController = navController
-            )
-        }
-        composable("addDonor") {
-            AddDonorView(onBack = { navController.popBackStack() })
-        }
-        composable("location") {
-            LocationScreen(onBack = { navController.popBackStack() })
-        }
-        composable("donorList") {
-            DonorListView(onBack = { navController.popBackStack() })
         }
     }
 }

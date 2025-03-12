@@ -72,6 +72,12 @@ dependencies {
 //    implementation(libs.google.firebase.auth.ktx)
 //    implementation(libs.google.firebase.firestore.ktx)
 
+    // Coil for image loading
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
+    // ActivityResult API for image picking
+    implementation("androidx.activity:activity-compose:1.8.0")
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
