@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.ahyaha.presentation.view.NavigationGraph
 import com.example.ahyaha.ui.theme.AhyahaTheme
 import com.example.ahyaha.presentation.view.MainScreen
+import com.example.ahyaha.presentation.view.NavigationGraph
 import com.example.ahyaha.presentation.viewmodel.BloodTypeViewModel
 import com.example.ahyaha.presentation.viewmodel.DonorViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -28,12 +30,11 @@ class MainActivity : ComponentActivity() {
                     val donorViewModel = hiltViewModel<DonorViewModel>()
                     val bloodTypeViewModel = hiltViewModel<BloodTypeViewModel>()
 
-
-                    MainScreen(
-                        donorViewModel,
-                        bloodTypeViewModel,
-                        modifier = Modifier.padding(innerPadding)
+                    NavigationGraph(
+                        donorViewModel = donorViewModel,
+                        bloodTypeViewModel = bloodTypeViewModel
                     )
+
                 }
             }
         }

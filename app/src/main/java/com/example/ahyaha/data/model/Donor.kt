@@ -11,7 +11,7 @@ data class Donor(
     val bloodGroup: String,
     val Rh: String,
     val location: String,
-    val lastDonationDate: Date?,
-    val createdAt: Date,
-    val updatedAt: Date
+    val lastDonationDate: Date? = null,
+    val createdAt: Date = Date(),
+    val updatedAt: Date = Date()
 )
