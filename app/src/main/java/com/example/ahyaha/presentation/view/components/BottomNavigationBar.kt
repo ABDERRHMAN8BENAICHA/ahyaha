@@ -48,5 +48,15 @@ fun BottomNavigationBar(onTabSelected: (Int) -> Unit) {
                 modifier = Modifier.size(24.dp)
             )
         }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        IconButton(onClick = { }) {
+            Icon(
+                Icons.Default.List,
+                contentDescription = "Add",
+                modifier = Modifier.size(24.dp)
+            )
+        }
     }
 }

@@ -32,7 +32,8 @@ class MainActivity : ComponentActivity() {
                     MainScreen(
                         donorViewModel,
                         bloodTypeViewModel,
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+                        navController = TODO()
                     )
                 }
             }
