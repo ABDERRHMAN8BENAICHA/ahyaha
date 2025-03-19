@@ -1,5 +1,5 @@
 [versions]
-agp = "8.8.0"
+agp = "8.7.2"
 kotlin = "2.0.0"
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -17,6 +17,7 @@ firebase = "33.9.0"
 firestore = "25.1.2"
 auth = "23.2.0"
 analytics  = "22.2.0"
+uiAndroid = "1.7.8"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -47,6 +48,7 @@ google-firebase-bom = { group = "com.google.firebase", name = "firebase-bom", ve
 google-firebase-analytics-ktx = { group = "com.google.firebase", name = "firebase-analytics-ktx" ,version.ref = "analytics"}
 google-firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx" , version.ref="auth"}
 google-firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firestore" }
+androidx-ui-android = { group = "androidx.compose.ui", name = "ui-android", version.ref = "uiAndroid" }
 
 
 [plugins]
