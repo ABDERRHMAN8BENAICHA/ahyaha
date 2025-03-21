@@ -17,7 +17,7 @@ data class UIState(
 )
 
 class DonorViewModel : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow(UIState())
     val uiState: StateFlow<UIState> = _uiState.asStateFlow()
 
