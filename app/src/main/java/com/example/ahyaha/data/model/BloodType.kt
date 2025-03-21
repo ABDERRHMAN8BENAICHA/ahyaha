@@ -1,4 +1,4 @@
-package com.example.ahyaha.model
+package com.example.ahyaha.data.model
 
 data class BloodType(
     val id: String,

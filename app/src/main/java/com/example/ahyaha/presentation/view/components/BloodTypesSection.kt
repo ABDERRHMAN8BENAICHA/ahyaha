@@ -1,4 +1,4 @@
-package com.example.ahyaha.view
+package com.example.ahyaha.presentation.view.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import com.example.ahyaha.R
 //ايقونات الزمرة +العنوان
 @Composable
@@ -50,21 +52,23 @@ fun BloodTypesSection() {
 
 @Composable
 fun ImageSection() {
-    val bloodTypes = listOf("A+", "AB+", "O+", "B+")
+    val bloodTypes = listOf("A+", "AB+", "O+", "B+", "A-", "AB-", "O-", "B-")
     val icons = listOf(
+        R.mipmap.group_1,
+        R.mipmap.group_2,
+        R.mipmap.group_3,
+        R.mipmap.group_4,
         R.mipmap.group_1,
         R.mipmap.group_2,
         R.mipmap.group_3,
         R.mipmap.group_4
     )
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
+    LazyRow(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        bloodTypes.forEachIndexed { index, bloodType ->
+        itemsIndexed(bloodTypes) { index, bloodType ->
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Image(
                     painter = painterResource(id = icons[index]),
