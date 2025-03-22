@@ -1,4 +1,4 @@
-package com.example.ahyaha.view
+package com.example.ahyaha.presentation.view.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable

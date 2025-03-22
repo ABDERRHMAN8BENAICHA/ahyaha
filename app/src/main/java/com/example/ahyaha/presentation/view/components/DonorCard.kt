@@ -1,4 +1,4 @@
-package com.example.ahyaha.view
+package com.example.ahyaha.presentation.view.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.ahyaha.R
-import com.example.ahyaha.model.Donor
+import com.example.ahyaha.data.model.Donor
 //معلومات النتبرعين
 @Composable
 fun RegularDonorsSection(donors: List<Donor>) {
@@ -43,7 +43,7 @@ fun RegularDonorsSection(donors: List<Donor>) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "Regular Domors",
+                text = "Regular Donors",
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
                 modifier = Modifier.padding(end = 4.dp)

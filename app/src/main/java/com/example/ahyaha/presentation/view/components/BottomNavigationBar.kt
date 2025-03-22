@@ -1,4 +1,4 @@
-package com.example.ahyaha.view
+package com.example.ahyaha.presentation.view.components
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
@@ -6,7 +6,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,6 +45,16 @@ fun BottomNavigationBar(onTabSelected: (Int) -> Unit) {
             Icon(
                 Icons.Default.List,
                 contentDescription = "list",
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        IconButton(onClick = { }) {
+            Icon(
+                Icons.Default.List,
+                contentDescription = "Add",
                 modifier = Modifier.size(24.dp)
             )
         }
