@@ -1,98 +1,118 @@
 package com.example.ahyaha.presentation.view
 
 import android.net.Uri
+import androidx.compose.material3.MaterialTheme
+
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import coil.compose.rememberAsyncImagePainter // For image loading
-import androidx.compose.runtime.*
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import kotlinx.coroutines.launch
-import com.example.ahyaha.presentation.viewmodel.AddDonorEvent
-import com.example.ahyaha.presentation.viewmodel.AddDonorViewModel
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
+import com.example.ahyaha.presentation.viewmodel.DonorDetailEvent
+import com.example.ahyaha.presentation.viewmodel.DonorDetailState
+import com.example.ahyaha.presentation.viewmodel.DonorDetailViewModel
 import com.example.ahyaha.ui.theme.*
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddDonorView(
+fun DonorDetailScreen(
     navController: NavController,
-    viewModel: AddDonorViewModel = hiltViewModel()
+    viewModel: DonorDetailViewModel = hiltViewModel()
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-    val scrollState = rememberScrollState()
-    val nameFieldFocus = remember { FocusRequester() }
+    var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri: Uri? ->
-            // Send event to ViewModel with the selected Uri
-            viewModel.onEvent(AddDonorEvent.ProfilePicture(uri))
+            viewModel.onEvent(DonorDetailEvent.EditProfilePictureChanged(uri))
         }
     )
 
-    // Request focus on name field when screen loads
-    LaunchedEffect(Unit) {
-        nameFieldFocus.requestFocus()
+    LaunchedEffect(state.deleteSuccess) {
+        if (state.deleteSuccess) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("Donor deleted successfully")
+                viewModel.onEvent(DonorDetailEvent.ResetStatus)
+                navController.popBackStack()
+            }
+        }
+    }
+
+    LaunchedEffect(state.saveSuccess) {
+        if (state.saveSuccess) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("Changes saved successfully")
+                viewModel.onEvent(DonorDetailEvent.ResetStatus)
+            }
+        }
+    }
+
+    LaunchedEffect(state.error, state.saveError, state.deleteError) {
+        val errorMsg = state.error ?: state.saveError ?: state.deleteError
+        if (errorMsg != null) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(errorMsg)
+                viewModel.onEvent(DonorDetailEvent.ResetStatus)
+            }
+        }
     }
 
     Scaffold(
-        snackbarHost = {
-            SnackbarHost(snackbarHostState) { data ->
-                Snackbar(
-                    snackbarData = data,
-                    containerColor = if (state.isSuccess) LifeGreen else BloodRed,
-                    contentColor = Color.White,
-                    shape = MaterialTheme.shapes.medium
-                )
-            }
-        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            "Add a Donor",
-                            color = BloodRed,
-                            textAlign = TextAlign.Center,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                },
+                title = { Text(if (state.isEditing) "Edit Donor" else "Donor Details", color = BloodRed, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = BloodRed)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = BloodRed)
+                    }
+                },
+                actions = {
+                    if (state.donor != null && !state.isLoading) {
+                        if (!state.isEditing) {
+                            IconButton(onClick = { viewModel.onEvent(DonorDetailEvent.EnterEditMode) }) {
+                                Icon(Icons.Default.Edit, contentDescription = "Edit Donor", tint = BloodRed)
+                            }
+                            IconButton(onClick = { showDeleteConfirmationDialog = true }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete Donor", tint = MaterialTheme.colorScheme.error)
+                            }
+                        } else {
+                            TextButton(onClick = { viewModel.onEvent(DonorDetailEvent.ExitEditMode) }) {
+                                Text("Cancel", color = BloodRed)
+                            }
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -101,265 +121,257 @@ fun AddDonorView(
             )
         }
     ) { paddingValues ->
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp)
-                    .padding(paddingValues)
-                    .verticalScroll(scrollState),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Form title with nice spacing
-                Text(
-                    "Donor Information",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = BloodRed,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
+        when {
+            state.isLoading -> {
+                Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            state.error != null || (state.donor == null && !state.isLoading) -> {
+                Box(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp), contentAlignment = Alignment.Center) {
+                    Text(state.error ?: "Donor not found", textAlign = TextAlign.Center)
+                }
+            }
+            state.donor != null -> {
+                DonorDetailForm(
+                    state = state,
+                    paddingValues = paddingValues,
+                    onEvent = viewModel::onEvent,
+                    onImagePickRequest = { imagePickerLauncher.launch("image/*") }
                 )
+            }
+        }
+    }
 
-                // Personal Information Section
-                InputField(
-                    label = "Full Name",
-                    value = state.name,
-                    onValueChange = { viewModel.onEvent(AddDonorEvent.NameChanged(it)) },
-                    errorMessage = state.error?.get("name"),
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = BloodRed) },
-                    modifier = Modifier.focusRequester(nameFieldFocus)
-                )
 
-                InputField(
-                    label = "E-mail",
-                    value = state.email,
-                    onValueChange = { viewModel.onEvent(AddDonorEvent.EmailChanged(it)) },
-                    errorMessage = state.error?.get("email"),
-                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = BloodRed) },
-                    keyboardType = KeyboardType.Email
-                )
-
-                InputField(
-                    label = "Phone Number",
-                    value = state.phoneNumber.take(10),
-                    onValueChange = {
-                        if (it.length <= 10 && it.all { char -> char.isDigit() }) {
-                            viewModel.onEvent(AddDonorEvent.PhoneNumberChanged(it))
-                        }
+    if (showDeleteConfirmationDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmationDialog = false },
+            title = { Text("Confirm Deletion") },
+            text = { Text("Are you sure you want to delete this donor? This action cannot be undone.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.onEvent(DonorDetailEvent.DeleteDonor)
+                        showDeleteConfirmationDialog = false
                     },
-                    errorMessage = state.error?.get("phoneNumber"),
-                    leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = BloodRed) },
-                    keyboardType = KeyboardType.Phone,
-                    placeholder = "10-digit number"
-                )
-
-                // Blood Information Section with divider
-                Divider(color = PlasmaOrange.copy(alpha = 0.5f), thickness = 1.dp)
-
-                Text(
-                    "Blood Information",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = BloodRed,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
-                )
-
-                // Blood Type Dropdown - Now in column instead of row
-                BloodTypeDropdown(
-                    selectedValue = state.bloodGroup,
-                    onValueChange = { viewModel.onEvent(AddDonorEvent.BloodGroupChanged(it)) }
-                )
-
-                // Rh Factor Dropdown - Now in column instead of row
-                RhFactorDropdown(
-                    selectedValue = state.rh,
-                    onValueChange = { viewModel.onEvent(AddDonorEvent.RhChanged(it)) }
-                )
-
-                // Location Section with divider
-                Divider(color = PlasmaOrange.copy(alpha = 0.5f), thickness = 1.dp)
-
-                Text(
-                    "Contact Information",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = BloodRed,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
-                )
-
-                InputField(
-                    label = "Location",
-                    value = state.location,
-                    onValueChange = { viewModel.onEvent(AddDonorEvent.LocationChanged(it)) },
-                    errorMessage = state.error?.get("location"),
-                    leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = BloodRed) }
-                )
-
-                Text(
-                    "Profile Picture",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = BloodRed, // Your theme color
-                    modifier = Modifier.padding(top = 0.dp, bottom = 0.dp) // Adjust padding as needed
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    // Inside the Row for the profile picture picker in AddDonorView.kt
-
-                    // Image Preview (Clickable)
-                    Box( // Use a Box to easily center the icon or image
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(CircleShape)
-                            .border(1.dp, PlasmaOrange, CircleShape) // Your theme border
-                            .background(MaterialTheme.colorScheme.secondaryContainer) // Add a background color
-                            .clickable { // Make area clickable to launch picker
-                                imagePickerLauncher.launch("image/*")
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (state.profilePictureUri != null) {
-                            // If a URI is selected, show the image
-                            Image(
-                                painter = rememberAsyncImagePainter(model = state.profilePictureUri),
-                                contentDescription = "Profile Picture Preview",
-                                modifier = Modifier.fillMaxSize(), // Fill the Box
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            // If no URI selected, show a placeholder Icon
-                            Icon(
-                                imageVector = Icons.Default.Person, // Or Icons.Default.AddAPhoto
-                                contentDescription = "Placeholder",
-                                modifier = Modifier.size(40.dp), // Adjust icon size
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer // Adjust tint
-                            )
-                        }
-                    }
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmationDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+}
 
 
-                    // Button to Choose Picture
-                    Button(
-                        onClick = {
-                            imagePickerLauncher.launch("image/*")
+@Composable
+fun DonorDetailForm(
+    state: DonorDetailState,
+    paddingValues: PaddingValues,
+    onEvent: (DonorDetailEvent) -> Unit,
+    onImagePickRequest: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scrollState = rememberScrollState()
+    val currentDonor = state.donor!!
+
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+                .padding(paddingValues)
+                .verticalScroll(scrollState),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                "Donor Information",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = BloodRed,
+                modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
+            )
+
+            Text(
+                text = "Profile Picture",
+                style = MaterialTheme.typography.labelMedium,
+                color = BloodRed.copy(alpha = 0.8f),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(CircleShape)
+                        .border(1.dp, PlasmaOrange, CircleShape)
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                        .clickable(enabled = state.isEditing) {
+                            if (state.isEditing) onImagePickRequest()
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = PlasmaOrange) // Your theme color
+                    contentAlignment = Alignment.Center
+                ) {
+                    val imageModel: Any = state.editedProfilePictureUri ?: currentDonor.profilePicture ?: Icons.Default.Person
+                    if (imageModel is ImageVector) {
+                        Icon(
+                            imageVector = imageModel,
+                            contentDescription = "Placeholder",
+                            modifier = Modifier.size(40.dp),
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    } else {
+                        Image(
+                            painter = rememberAsyncImagePainter(model = imageModel), // Coil handles Uri/String
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                }
+                if (state.isEditing) {
+                    Button(
+                        onClick = onImagePickRequest,
+                        colors = ButtonDefaults.buttonColors(containerColor = PlasmaOrange)
                     ) {
                         Text("Choose Picture", color=Color.White)
                     }
                 }
+            }
 
-//                InputField(
-//                    label = "Profile Picture URL",
-//                    value = state.profilePicture,
-//                    onValueChange = { viewModel.onEvent(AddDonorEvent.ProfilePictureChanged(it)) },
-//                    leadingIcon = { Icon(Icons.Default.AccountCircle, contentDescription = null, tint = BloodRed) },
-//                    placeholder = "Optional"
-//                )
+            // --- Input Fields ---
+            InputField(
+                label = "Full Name",
+                value = if (state.isEditing) state.editedName else currentDonor.name,
+                onValueChange = { if (state.isEditing) onEvent(DonorDetailEvent.EditNameChanged(it)) },
+                readOnly = !state.isEditing,
+                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = BloodRed) },
+                errorMessage = if (state.isEditing) state.saveError else null
+            )
+            InputField(
+                label = "E-mail",
+                value = if (state.isEditing) state.editedEmail else currentDonor.email,
+                onValueChange = { if (state.isEditing) onEvent(DonorDetailEvent.EditEmailChanged(it)) },
+                readOnly = !state.isEditing,
+                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = BloodRed) },
+                keyboardType = KeyboardType.Email,
+                errorMessage = if (state.isEditing) state.saveError else null
+            )
+            InputField(
+                label = "Phone Number",
+                value = if (state.isEditing) state.editedPhoneNumber else currentDonor.phoneNumber,
+                onValueChange = {
 
+                    if (state.isEditing && it.length <= 10 && it.all { char -> char.isDigit() }) {
+                        onEvent(DonorDetailEvent.EditPhoneNumberChanged(it))
+                    } else if (!state.isEditing) {
+
+                    }
+                },
+                readOnly = !state.isEditing,
+                leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = BloodRed) },
+                keyboardType = KeyboardType.Phone,
+                placeholder = "10-digit number",
+                errorMessage = if (state.isEditing) state.saveError else null
+            )
+
+            Divider(color = PlasmaOrange.copy(alpha = 0.5f), thickness = 1.dp)
+            Text("Blood Information", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = BloodRed, modifier = Modifier.padding(top = 8.dp, bottom = 8.dp))
+
+            // --- Dropdowns ---
+            BloodTypeDropdown(
+                selectedValue = if (state.isEditing) state.editedBloodGroup else currentDonor.bloodGroup,
+                onValueChange = { if (state.isEditing) onEvent(DonorDetailEvent.EditBloodGroupChanged(it)) },
+                enabled = state.isEditing
+            )
+            RhFactorDropdown(
+                selectedValue = if (state.isEditing) state.editedRh else currentDonor.rh,
+                onValueChange = { if (state.isEditing) onEvent(DonorDetailEvent.EditRhChanged(it)) },
+                enabled = state.isEditing
+            )
+
+            Divider(color = PlasmaOrange.copy(alpha = 0.5f), thickness = 1.dp)
+            Text("Contact Information", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = BloodRed, modifier = Modifier.padding(top = 8.dp, bottom = 8.dp))
+
+            InputField(
+                label = "Location",
+                value = if (state.isEditing) state.editedLocation else currentDonor.location,
+                onValueChange = { if (state.isEditing) onEvent(DonorDetailEvent.EditLocationChanged(it)) },
+                readOnly = !state.isEditing,
+                leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = BloodRed) },
+                errorMessage = if (state.isEditing) state.saveError else null
+            )
+
+            // --- Save Button (only in edit mode) ---
+            if (state.isEditing) {
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // Submit Button with better styling
                 Button(
-                    onClick = {
-                        val requiredFields = listOf(
-                            state.name to "Name",
-                            state.email to "Email",
-                            state.phoneNumber to "Phone Number",
-                            state.bloodGroup to "Blood Type",
-                            state.rh to "Rh Factor",
-                            state.location to "Location"
-                        )
-
-                        val missingFields = requiredFields
-                            .filter { (value, _) -> value.isBlank() }
-                            .map { (_, name) -> name }
-
-                        if (missingFields.isNotEmpty()) {
-                            val message = "Please fill in: ${missingFields.joinToString(", ")}"
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar(message)
-                            }
-                        } else {
-                            viewModel.onEvent(AddDonorEvent.Submit)
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
+                    onClick = { onEvent(DonorDetailEvent.SaveChanges) },
+                    enabled = !state.isSaving,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = BloodRed),
-                    enabled = !state.isLoading,
                     shape = MaterialTheme.shapes.medium
                 ) {
-                    if (state.isLoading) {
+                    if (state.isSaving) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
                             color = Color.White,
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text(
-                            "Register as Donor",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text("Save Changes", color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 }
-
-                // Spacing at the bottom for better UX
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Show success notification and navigate back if donor is added
-                LaunchedEffect(state.isSuccess) {
-                    if (state.isSuccess) {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar("Donor added successfully!")
-                            // Add a small delay before navigation
-                            delay(100)
-                            navController.popBackStack()
-                        }
-                    }
-                }
-
-                // Show error messages if any
-                LaunchedEffect(state.error) {
-                    if (state.error != null && state.error!!.isNotEmpty()) {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar("Please correct the errors in the form")
-                        }
-                    }
+                // Show general save error below button
+                if (state.saveError != null) {
+                    Text(
+                        text = state.saveError ?: "Unknown save error", // Use the string error
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
                 }
             }
-        }
-    }
+
+            Spacer(modifier = Modifier.height(16.dp)) // Bottom spacing
+        } // End Column
+    } // End CompositionLocalProvider
 }
-//------------------------------------------------------------------------------------------------------------------------------------
-// Enhanced Input Field with more parameters
+
+
+
 @Composable
 fun InputField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
     errorMessage: String? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     placeholder: String? = null,
-    modifier: Modifier = Modifier
+    readOnly: Boolean = false
 ) {
     Column(modifier = modifier) {
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            label = { Text(label, color = BloodRed.copy(alpha = 0.8f)) },
             modifier = Modifier.fillMaxWidth(),
-            isError = errorMessage != null,
+            label = { Text(label, color = BloodRed.copy(alpha = 0.8f)) },
+            isError = errorMessage != null && !readOnly,
             leadingIcon = leadingIcon,
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             visualTransformation = visualTransformation,
             placeholder = placeholder?.let { { Text(it, color = Color.Gray.copy(alpha = 0.6f)) } },
+            readOnly = readOnly,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = BloodRed,
                 unfocusedBorderColor = PlasmaOrange.copy(alpha = 0.7f),
@@ -368,15 +380,19 @@ fun InputField(
                 cursorColor = BloodRed,
                 errorBorderColor = Color.Red,
                 errorLabelColor = Color.Red,
-                errorCursorColor = Color.Red
+                errorCursorColor = Color.Red,
+                disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), // Example disabled text color
+                disabledBorderColor = PlasmaOrange.copy(alpha = 0.5f),
+                disabledLabelColor = BloodRed.copy(alpha = 0.5f),
+                disabledLeadingIconColor = BloodRed.copy(alpha = 0.5f)
             ),
             singleLine = true,
             shape = MaterialTheme.shapes.small
         )
-        if (errorMessage != null) {
+        if (errorMessage != null && !readOnly) {
             Text(
                 errorMessage,
-                color = Color.Red,
+                color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(start = 4.dp, top = 4.dp)
             )
@@ -384,9 +400,13 @@ fun InputField(
     }
 }
 
-// Enhanced Blood Type Dropdown with exposed expanded state
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BloodTypeDropdown(selectedValue: String, onValueChange: (String) -> Unit) {
+fun BloodTypeDropdown(
+    selectedValue: String,
+    onValueChange: (String) -> Unit,
+    enabled: Boolean = true
+) {
     var expanded by remember { mutableStateOf(false) }
     val bloodTypes = listOf("A", "B", "AB", "O")
 
@@ -396,15 +416,18 @@ fun BloodTypeDropdown(selectedValue: String, onValueChange: (String) -> Unit) {
                 value = selectedValue,
                 onValueChange = {},
                 readOnly = true,
+                enabled = enabled,
                 label = { Text("Blood Type", color = BloodRed.copy(alpha = 0.8f)) },
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    IconButton(onClick = { expanded = !expanded }) {
+                    IconButton(
+                        onClick = { if (enabled) expanded = !expanded },
+                        enabled = enabled
+                    ) {
                         Icon(
                             Icons.Default.ArrowDropDown,
-                            contentDescription = "Select",
-                            tint = BloodRed
+                            contentDescription = "Select Blood Type",
+                            tint = if (enabled) BloodRed else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                         )
                     }
                 },
@@ -412,10 +435,15 @@ fun BloodTypeDropdown(selectedValue: String, onValueChange: (String) -> Unit) {
                     Icon(
                         imageVector = Icons.Default.Favorite,
                         contentDescription = null,
-                        tint = BloodRed
+                        tint = if (enabled) BloodRed else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                     )
                 },
                 colors = OutlinedTextFieldDefaults.colors(
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    disabledBorderColor = PlasmaOrange.copy(alpha = 0.5f),
+                    disabledLabelColor = BloodRed.copy(alpha = 0.5f),
+                    disabledLeadingIconColor = BloodRed.copy(alpha = 0.5f),
+                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
                     focusedBorderColor = BloodRed,
                     unfocusedBorderColor = PlasmaOrange.copy(alpha = 0.7f),
                     focusedLabelColor = BloodRed,
@@ -425,17 +453,17 @@ fun BloodTypeDropdown(selectedValue: String, onValueChange: (String) -> Unit) {
                 shape = MaterialTheme.shapes.small
             )
 
-            // Add an invisible clickable box to ensure the entire field is clickable
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .clickable { expanded = !expanded }
+                    .clickable(enabled = enabled) {
+                        if (enabled) expanded = !expanded
+                    }
             )
 
             DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                modifier = Modifier.width(IntrinsicSize.Min)
+                expanded = expanded && enabled,
+                onDismissRequest = { expanded = false }
             ) {
                 bloodTypes.forEach { bloodType ->
                     DropdownMenuItem(
@@ -444,9 +472,6 @@ fun BloodTypeDropdown(selectedValue: String, onValueChange: (String) -> Unit) {
                             onValueChange(bloodType)
                             expanded = false
                         },
-                        colors = MenuDefaults.itemColors(
-                            textColor = if (bloodType == selectedValue) BloodRed else Color.Black
-                        )
                     )
                 }
             }
@@ -454,9 +479,14 @@ fun BloodTypeDropdown(selectedValue: String, onValueChange: (String) -> Unit) {
     }
 }
 
-// Enhanced Rh Factor Dropdown with improved dropdown visibility
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RhFactorDropdown(selectedValue: String, onValueChange: (String) -> Unit) {
+fun RhFactorDropdown(
+    selectedValue: String,
+    onValueChange: (String) -> Unit,
+    enabled: Boolean = true
+) {
     var expanded by remember { mutableStateOf(false) }
     val rhFactors = listOf("+", "-")
 
@@ -466,15 +496,18 @@ fun RhFactorDropdown(selectedValue: String, onValueChange: (String) -> Unit) {
                 value = selectedValue,
                 onValueChange = {},
                 readOnly = true,
+                enabled = enabled,
                 label = { Text("Rh Factor", color = BloodRed.copy(alpha = 0.8f)) },
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    IconButton(onClick = { expanded = !expanded }) {
+                    IconButton(
+                        onClick = { if (enabled) expanded = !expanded }, // Respect enabled state
+                        enabled = enabled
+                    ) {
                         Icon(
                             Icons.Default.ArrowDropDown,
-                            contentDescription = "Select",
-                            tint = BloodRed
+                            contentDescription = "Select Rh Factor",
+                            tint = if (enabled) BloodRed else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                         )
                     }
                 },
@@ -482,10 +515,16 @@ fun RhFactorDropdown(selectedValue: String, onValueChange: (String) -> Unit) {
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = null,
-                        tint = BloodRed
+                        tint = if (enabled) BloodRed else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                     )
                 },
                 colors = OutlinedTextFieldDefaults.colors(
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    disabledBorderColor = PlasmaOrange.copy(alpha = 0.5f),
+                    disabledLabelColor = BloodRed.copy(alpha = 0.5f),
+                    disabledLeadingIconColor = BloodRed.copy(alpha = 0.5f),
+                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                    // Keep your focused/unfocused colors
                     focusedBorderColor = BloodRed,
                     unfocusedBorderColor = PlasmaOrange.copy(alpha = 0.7f),
                     focusedLabelColor = BloodRed,
@@ -495,15 +534,16 @@ fun RhFactorDropdown(selectedValue: String, onValueChange: (String) -> Unit) {
                 shape = MaterialTheme.shapes.small
             )
 
-            // Add an invisible clickable box to ensure the entire field is clickable
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .clickable { expanded = !expanded }
+                    .clickable(enabled = enabled) {
+                        if (enabled) expanded = !expanded
+                    }
             )
 
             DropdownMenu(
-                expanded = expanded,
+                expanded = expanded && enabled,
                 onDismissRequest = { expanded = false }
             ) {
                 rhFactors.forEach { rh ->
@@ -512,10 +552,7 @@ fun RhFactorDropdown(selectedValue: String, onValueChange: (String) -> Unit) {
                         onClick = {
                             onValueChange(rh)
                             expanded = false
-                        },
-                        colors = MenuDefaults.itemColors(
-                            textColor = if (rh == selectedValue) BloodRed else Color.Black
-                        )
+                        }
                     )
                 }
             }

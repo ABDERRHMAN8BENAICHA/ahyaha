@@ -26,6 +26,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+
 
 import androidx.compose.material.icons.filled.*
 
@@ -38,8 +43,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.LocalTextStyle
 
 //لأيقونات (إعدادات - إشعارات - ملف شخصي)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TopBar(searchText: String, onSearchTextChanged: (String) -> Unit) {
+fun TopBar(searchText: String,
+           onSearchTextChanged: (String) -> Unit ,
+           selectedBloodType: String?,
+           onBloodTypeSelect: (String?) -> Unit,
+           selectedRh: String?,
+           onRhSelect: (String?) -> Unit )
+    {
+        val bloodTypes = listOf("A", "B", "AB", "O")
+        val rhFactors = listOf("+", "-")
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -128,6 +142,48 @@ fun TopBar(searchText: String, onSearchTextChanged: (String) -> Unit) {
             }
         }
 
+
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text("Blood Type:", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(end=4.dp)) // Label
+            bloodTypes.forEach { type ->
+                FilterChip(
+                    selected = (selectedBloodType == type),
+                    onClick = {
+                        onBloodTypeSelect(if (selectedBloodType == type) null else type)
+                    },
+                    label = { Text(type) },
+                    leadingIcon = if (selectedBloodType == type) { // Optional checkmark icon
+                        { Icon(Icons.Filled.Done, contentDescription = "Selected", modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+                    } else {
+                        null
+                    },
+
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Text("Rh Factor:", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(end=4.dp)) // Label
+            rhFactors.forEach { factor ->
+                FilterChip(
+                    selected = (selectedRh == factor),
+                    onClick = {
+                        onRhSelect(if (selectedRh == factor) null else factor)
+                    },
+                    label = { Text(factor) },
+                    leadingIcon = if (selectedRh == factor) {
+                        { Icon(Icons.Filled.Done, contentDescription = "Selected", modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+                    } else {
+                        null
+                    }
+
+                )
+            }
+        }
 
     }
 }

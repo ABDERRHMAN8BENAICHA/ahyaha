@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.dagger.hilt.plugin)
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.serialization)
+    alias(libs.plugins.google.services)
     //alias(libs.plugins.google.services)
 }
 
@@ -58,6 +59,7 @@ dependencies {
 
     //Dagger Hilt
     implementation(libs.dagger.hilt)
+    implementation(libs.firebase.firestore)
     kapt(libs.dagger.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
@@ -67,10 +69,12 @@ dependencies {
 
     //firebase
 
-//    implementation(platform(libs.google.firebase.bom))
-//    implementation(libs.google.firebase.analytics.ktx)
-//    implementation(libs.google.firebase.auth.ktx)
-//    implementation(libs.google.firebase.firestore.ktx)
+    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0") // Or latest
+    implementation(platform(libs.google.firebase.bom))
+    implementation(libs.google.firebase.analytics.ktx)
+    implementation(libs.google.firebase.auth.ktx)
+    implementation(libs.google.firebase.firestore.ktx)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)

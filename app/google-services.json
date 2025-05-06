@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "552514582478",
+    "project_id": "aymen69zouzou",
+    "storage_bucket": "aymen69zouzou.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:552514582478:android:7f5b831850d8efe3945d9f",
+        "android_client_info": {
+          "package_name": "com.example.ahyaha"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPMRhehpSiAXBDrDMguD0fAokBwlvF3fY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
