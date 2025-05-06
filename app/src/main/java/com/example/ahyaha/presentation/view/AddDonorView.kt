@@ -1,5 +1,15 @@
 package com.example.ahyaha.presentation.view
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.rememberAsyncImagePainter // For image loading
 import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
@@ -38,6 +48,14 @@ fun AddDonorView(
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     val nameFieldFocus = remember { FocusRequester() }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            // Send event to ViewModel with the selected Uri
+            viewModel.onEvent(AddDonorEvent.ProfilePicture(uri))
+        }
+    )
 
     // Request focus on name field when screen loads
     LaunchedEffect(Unit) {
@@ -175,13 +193,71 @@ fun AddDonorView(
                     leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = BloodRed) }
                 )
 
-                InputField(
-                    label = "Profile Picture URL",
-                    value = state.profilePicture,
-                    onValueChange = { viewModel.onEvent(AddDonorEvent.ProfilePictureChanged(it)) },
-                    leadingIcon = { Icon(Icons.Default.AccountCircle, contentDescription = null, tint = BloodRed) },
-                    placeholder = "Optional"
+                Text(
+                    "Profile Picture",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = BloodRed, // Your theme color
+                    modifier = Modifier.padding(top = 0.dp, bottom = 0.dp) // Adjust padding as needed
                 )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Inside the Row for the profile picture picker in AddDonorView.kt
+
+                    // Image Preview (Clickable)
+                    Box( // Use a Box to easily center the icon or image
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape)
+                            .border(1.dp, PlasmaOrange, CircleShape) // Your theme border
+                            .background(MaterialTheme.colorScheme.secondaryContainer) // Add a background color
+                            .clickable { // Make area clickable to launch picker
+                                imagePickerLauncher.launch("image/*")
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (state.profilePictureUri != null) {
+                            // If a URI is selected, show the image
+                            Image(
+                                painter = rememberAsyncImagePainter(model = state.profilePictureUri),
+                                contentDescription = "Profile Picture Preview",
+                                modifier = Modifier.fillMaxSize(), // Fill the Box
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            // If no URI selected, show a placeholder Icon
+                            Icon(
+                                imageVector = Icons.Default.Person, // Or Icons.Default.AddAPhoto
+                                contentDescription = "Placeholder",
+                                modifier = Modifier.size(40.dp), // Adjust icon size
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer // Adjust tint
+                            )
+                        }
+                    }
+
+
+                    // Button to Choose Picture
+                    Button(
+                        onClick = {
+                            imagePickerLauncher.launch("image/*")
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = PlasmaOrange) // Your theme color
+                    ) {
+                        Text("Choose Picture", color=Color.White)
+                    }
+                }
+
+//                InputField(
+//                    label = "Profile Picture URL",
+//                    value = state.profilePicture,
+//                    onValueChange = { viewModel.onEvent(AddDonorEvent.ProfilePictureChanged(it)) },
+//                    leadingIcon = { Icon(Icons.Default.AccountCircle, contentDescription = null, tint = BloodRed) },
+//                    placeholder = "Optional"
+//                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 

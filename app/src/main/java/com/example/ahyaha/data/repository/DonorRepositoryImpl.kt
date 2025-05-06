@@ -1,108 +1,124 @@
-package com.example.ahyaha.data.repository
+package com.example.ahyaha.data.repository // Or wherever DonorRepositoryImpl is
 
 import com.example.ahyaha.data.model.Donor
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.firestore.ktx.snapshots
+import com.google.firebase.firestore.ktx.toObject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import java.util.Date
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
+import javax.inject.Singleton
+import com.google.firebase.firestore.FieldValue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 
-class DonorRepositoryImpl : DonorRepository {
 
+@Singleton
+class DonorRepositoryImpl @Inject constructor(
+    private val firestore: FirebaseFirestore
+) : DonorRepository {
 
-    private val _donors = mutableListOf(
-        Donor(
-            id = "1",
-            name = "John Doe",
-            email = "john.doe@example.com",
-            phoneNumber = "1234567890",
-            profilePicture = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-            bloodGroup = "A",
-            Rh = "+",
-            location = "New York",
-            lastDonationDate = Date(),
-            createdAt = Date(),
-            updatedAt = Date()
-        ),
-        Donor(
-            id = "2",
-            name = "Jane Smith",
-            email = "jane.smith@example.com",
-            phoneNumber = "0987654321",
-            profilePicture = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-            bloodGroup = "B",
-            Rh = "-",
-            location = "Los Angeles",
-            lastDonationDate = Date(),
-            createdAt = Date(),
-            updatedAt = Date()
-        ),
-        Donor(
-            id = "3",
-            name = "Michael ",
-            email = "michael.johnson@example.com",
-            phoneNumber = "5555555555",
-            profilePicture = "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-            bloodGroup = "O",
-            Rh = "+",
-            location = "Chicago",
-            lastDonationDate = Date(),
-            createdAt = Date(),
-            updatedAt = Date()
-        ),
-        Donor(
-            id = "4",
-            name = "Emily Davis",
-            email = "emily.davis@example.com",
-            phoneNumber = "4444444444",
-            profilePicture = "https://images.unsplash.com/photo-1491349174775-aaafddd81942?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-            bloodGroup = "AB",
-            Rh = "+",
-            location = "Houston",
-            lastDonationDate = Date(),
-            createdAt = Date(),
-            updatedAt = Date()
-        ),
-        Donor(
-            id = "5",
-            name = "David Wilson",
-            email = "david.wilson@example.com",
-            phoneNumber = "3333333333",
-            profilePicture = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-            bloodGroup = "A",
-            Rh = "-",
-            location = "Phoenix",
-            lastDonationDate = Date(),
-            createdAt = Date(),
-            updatedAt = Date()
-        ),
-        Donor(
-            id = "6",
-            name = "okba ",
-            email = "michael.johnson@example.com",
-            phoneNumber = "5555555555",
-            profilePicture = "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-            bloodGroup = "O",
-            Rh = "+",
-            location = "Chicago",
-            lastDonationDate = Date(),
-            createdAt = Date(),
-            updatedAt = Date()
-        ),
+    private val donorsCollection = firestore.collection("donors")
 
-        )
+    override fun getDonors(): Flow<Result<List<Donor>>> {
+        return donorsCollection
+            .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .snapshots()
+            .map { snapshot: QuerySnapshot ->
 
-    private val _donorFlow = MutableSharedFlow<List<Donor>>(replay = 1)
+                val donors = snapshot.documents.mapNotNull { doc ->
+                    try {
+                        doc.toObject<Donor>()
+                    } catch (e: Exception) {
 
-    init {
-        _donorFlow.tryEmit(_donors.toList())
+                        println("Error converting document ${doc.id}: ${e.message}")
+                        null
+                    }
+                }
+                Result.Success(donors) as Result<List<Donor>>
+            }
+            .catch { exception ->
+                println("Error fetching donors: ${exception.message}")
+                emit(Result.Error(Exception("Failed to fetch donors", exception)))
+            }
+    }
+
+    override fun getDonorById(donorId: String): Flow<Result<Donor?>> {
+        if (donorId.isBlank()) {
+            return flow { emit(Result.Error(IllegalArgumentException("Donor ID cannot be blank"))) }
+        }
+        return firestore.collection("donors").document(donorId)
+            .snapshots()
+            .map { snapshot ->
+                try {
+                    val donor = snapshot.toObject<Donor>()
+                    if (snapshot.exists()) {
+                        Result.Success(donor) as Result<Donor?>
+                    } else {
+                        Result.Success(null)
+                    }
+                } catch (e: Exception) {
+                    println("Error converting document ${snapshot.id}: ${e.message}")
+                    Result.Error(e) as Result<Donor?>
+                }
+            }
+            .catch { exception ->
+                println("Error fetching donor $donorId: ${exception.message}")
+                emit(Result.Error(Exception("Failed to fetch donor $donorId", exception)))
+            }
+            .flowOn(Dispatchers.IO)
     }
 
 
-    override fun getAllDonors(): Flow<List<Donor>> = _donorFlow
-
-    override suspend fun addDonor(donor: Donor) {
-        _donors.add(donor)
-        _donorFlow.emit(_donors.toList())
+    override suspend fun addDonor(donor: Donor): Result<String> {
+        return try {
+            val documentRef = donorsCollection.add(donor).await()
+            Result.Success(documentRef.id)
+        } catch (e: Exception) {
+            println("Error adding donor: ${e.message}")
+            Result.Error(Exception("Failed to add donor", e))
+        }
     }
 
+    override suspend fun updateDonor(donor: Donor): Result<Unit> {
+        if (donor.id.isBlank()) {
+            return Result.Error(Exception("Donor ID is missing for update"))
+        }
+        return try {
+            val updates = mapOf(
+                "name" to donor.name,
+                "email" to donor.email,
+                "phoneNumber" to donor.phoneNumber,
+                "profilePicture" to donor.profilePicture,
+                "bloodGroup" to donor.bloodGroup,
+                "Rh" to donor.rh,
+                "location" to donor.location,
+                "lastDonationDate" to donor.lastDonationDate, // Already a Timestamp
+                "updatedAt" to FieldValue.serverTimestamp() // Special value for server time
+            )
+            donorsCollection.document(donor.id).update(updates).await()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            println("Error updating donor ${donor.id}: ${e.message}")
+            Result.Error(Exception("Failed to update donor", e))
+        }
+    }
+
+
+    override suspend fun deleteDonor(donorId: String): Result<Unit> {
+        if (donorId.isBlank()) {
+            return Result.Error(Exception("Donor ID is missing for delete"))
+        }
+        return try {
+            donorsCollection.document(donorId).delete().await()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            println("Error deleting donor $donorId: ${e.message}")
+            Result.Error(Exception("Failed to delete donor", e))
+        }
+    }
 }
-

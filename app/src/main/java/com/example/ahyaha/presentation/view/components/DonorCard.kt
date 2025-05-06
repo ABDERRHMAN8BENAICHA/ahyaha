@@ -1,6 +1,7 @@
 package com.example.ahyaha.presentation.view.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +35,7 @@ import com.example.ahyaha.R
 import com.example.ahyaha.data.model.Donor
 //معلومات النتبرعين
 @Composable
-fun RegularDonorsSection(donors: List<Donor>) {
+fun RegularDonorsSection(donors: List<Donor> , onDonorClick:(donorId : String) -> Unit) {
     Column(modifier = Modifier.padding(16.dp)) {
         // عنوان القسم مع أيقونة السهم
         Row(
@@ -57,8 +58,8 @@ fun RegularDonorsSection(donors: List<Donor>) {
         }
 
         LazyRow {
-            items(donors ?: emptyList()) { donor ->
-                DonorCard(donor)
+            items(donors ) { donor ->
+                DonorCard(donor = donor , onClick = {onDonorClick(donor.id)})
             }
         }
     }
@@ -66,10 +67,10 @@ fun RegularDonorsSection(donors: List<Donor>) {
 
 
 @Composable
-fun DonorCard(donor: Donor) {
+fun DonorCard(donor: Donor , onClick:() -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(8.dp)
+        modifier = Modifier.padding(8.dp).clickable(onClick = onClick)
     ) {
         Card(
             elevation = CardDefaults.cardElevation(4.dp),
@@ -99,7 +100,7 @@ fun DonorCard(donor: Donor) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(text = donor.name, style = MaterialTheme.typography.titleSmall,  textAlign = TextAlign.Center)
-                Text(text = "${donor.bloodGroup}${donor.Rh}",
+                Text(text = "${donor.bloodGroup}${donor.rh}",
                     style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
                 Text(text = donor.location, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
             }

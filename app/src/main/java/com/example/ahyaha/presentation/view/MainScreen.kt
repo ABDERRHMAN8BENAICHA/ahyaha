@@ -21,14 +21,37 @@ fun MainScreen(
     donorViewModel: DonorViewModel,
     bloodTypeViewModel: BloodTypeViewModel,
     navController: NavController, // ✅ تأكد من تمرير NavController
+    onDonorClick: (donorId: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val donorState by donorViewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(0) }
     var searchText by remember { mutableStateOf("") }
 
-    val filteredDonors = remember(searchText, donorState.donors) {
-        donorState.donors.filter { it.name.contains(searchText, ignoreCase = true) }
+    var selectedBloodTypeFilter by remember { mutableStateOf<String?>(null) }
+    var selectedRhFilter by remember { mutableStateOf<String?>(null) }
+
+    val filteredDonors = remember(
+        searchText,
+        selectedBloodTypeFilter,
+        selectedRhFilter,
+        donorState.donors // Depend on all inputs
+    ) {
+        donorState.donors.filter { donor ->
+            // Name search condition (existing)
+            val nameMatch = donor.name.contains(searchText, ignoreCase = true)
+
+            // Blood type filter condition
+            val bloodTypeMatch = selectedBloodTypeFilter == null ||
+                    donor.bloodGroup.equals(selectedBloodTypeFilter, ignoreCase = true)
+
+            // Rh factor filter condition
+            val rhMatch = selectedRhFilter == null ||
+                    donor.rh.equals(selectedRhFilter, ignoreCase = true)
+
+
+            nameMatch && bloodTypeMatch && rhMatch
+        }
     }
 
     Scaffold(
@@ -50,31 +73,22 @@ fun MainScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            TopBar(searchText = searchText, onSearchTextChanged = { searchText = it })
+            TopBar( searchText = searchText,
+                onSearchTextChanged = { searchText = it },
+                selectedBloodType = selectedBloodTypeFilter,
+                onBloodTypeSelect = { selectedBloodTypeFilter = it },
+                selectedRh = selectedRhFilter,
+                onRhSelect = { selectedRhFilter = it }
+            )
             BloodTypesSection()
             ImageSection()
-            RegularDonorsSection(donors = filteredDonors)
+            RegularDonorsSection(donors = filteredDonors , onDonorClick = onDonorClick)
             Events()
             ActivitySection()
             RecentPostsSection()
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
