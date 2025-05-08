@@ -1,5 +1,29 @@
 # 🩸 Ahyaha - Blood Donation App
 
+<<<<<<< HEAD
+Ahyaha is a simple blood donation app that connects donors with recipients. The current version features basic donor registration and authentication functionality.
+
+## Features ✨
+- **User Authentication**: Sign up and sign in securely
+- **Donor Registration**: Add yourself as a blood donor
+- **Profile Management**: Update your donor information
+
+## Firebase Integration 🔥
+- **Firebase Authentication**: Secure user registration and login
+- **Firestore Database**: Store donor profiles and blood type information
+
+## Getting Started 🚀
+
+### Prerequisites
+- Android Studio
+- Firebase account
+
+### Setup
+1. Clone the repository
+2. Connect the app to your Firebase project
+3. Enable Authentication and Firestore in your Firebase console
+4. Run the app
+=======
 [![Kotlin Version](https://img.shields.io/badge/Kotlin-2.0.0-blue.svg)](https://kotlinlang.org)
 [![Compose Version](https://img.shields.io/badge/Jetpack%20Compose-1.10.0-brightgreen)](https://developer.android.com/jetpack/compose)
 
@@ -78,3 +102,4 @@ For questions or suggestions:
 
 **Project Maintainer**: [BenAicha Abderrahman]   
 **GitHub Issues**: [Create New Issue](#)
+>>>>>>> 72fc86b69f8fae13075f897414c2b03b2cb1801c

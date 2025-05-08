@@ -2,8 +2,25 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+<<<<<<< HEAD
+    alias(libs.plugins.dagger.hilt.plugin)
+    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.serialization)
+    alias(libs.plugins.google.services)
+    //alias(libs.plugins.google.services)
+}
+/*
+* implementation platform('com.google.firebase:firebase-bom:32.7.4')
+implementation 'com.google.firebase:firebase-firestore'
+implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3'
+*
+*
+*
+* */
+=======
 }
 
+>>>>>>> 72fc86b69f8fae13075f897414c2b03b2cb1801c
 android {
     namespace = "com.example.ahyaha"
     compileSdk = 35
@@ -38,12 +55,40 @@ android {
         compose = true
     }
 }
+<<<<<<< HEAD
+=======
 
+>>>>>>> 72fc86b69f8fae13075f897414c2b03b2cb1801c
 dependencies {
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    // ViewModel Kotlin extensions for easier ViewModel usage
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    // Compose integration for ViewModel to use ViewModel in composable functions
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    // Compose integration with Activity for setting up Compose UI in Activities
     implementation(libs.androidx.activity.compose)
+    // Coil image loading library for Compose to load and display images efficiently
+    implementation(libs.io.coil.kt.compose)
+<<<<<<< HEAD
+
+    //Dagger Hilt
+    implementation(libs.dagger.hilt)
+    kapt(libs.dagger.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+
+    //Navigation compose
+    implementation(libs.androidx.navigation.compose)
+
+    //firebase
+    implementation(platform(libs.google.firebase.bom))
+    implementation(libs.google.firebase.analytics.ktx)
+    implementation(libs.google.firebase.auth.ktx)
+    implementation(libs.google.firebase.firestore.ktx)
+
+=======
+>>>>>>> 72fc86b69f8fae13075f897414c2b03b2cb1801c
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
@@ -56,4 +101,8 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+<<<<<<< HEAD
+=======
+
+>>>>>>> 72fc86b69f8fae13075f897414c2b03b2cb1801c
 }

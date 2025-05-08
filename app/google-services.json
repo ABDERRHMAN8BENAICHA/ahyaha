@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "672666675028",
+    "project_id": "ahyaha-1365e",
+    "storage_bucket": "ahyaha-1365e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:672666675028:android:e4f889811e3d70e34d8ac1",
+        "android_client_info": {
+          "package_name": "com.aya.aya"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTFkLxuvFSgcGfaPJosLR9-OYvELxUJjA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:672666675028:android:0b90462ae384e7014d8ac1",
+        "android_client_info": {
+          "package_name": "com.example.ahyaha"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTFkLxuvFSgcGfaPJosLR9-OYvELxUJjA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
